@@ -2,9 +2,10 @@
 import random
 import string
 
+import duckdb
 from flask import Blueprint, jsonify
 
-from .db import close_db_connection, get_db_connection
+from .db import close_db_connection, get_db_connection, open_attach_duckdb
 
 bp = Blueprint('example', __name__)
 
@@ -33,6 +34,13 @@ def add_user():
     conn.close()
     close_db_connection(conn)
     return jsonify(inserted_user)
+
+@bp.route('getDelta', methods=['GET'])
+def get_delta():
+    conn = open_attach_duckdb()
+    result = conn.execute("SELECT * FROM postgres_db.users_audit").fetchall()
+    conn.close()
+    return jsonify(result)
 
 def random_string(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))

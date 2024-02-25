@@ -1,6 +1,7 @@
 # db.py
+import duckdb
 import psycopg2
-from flask import current_app
+from flask import current_app, jsonify
 from psycopg2 import pool
 
 
@@ -29,3 +30,10 @@ def close_db_connection(conn):
         current_app.postgres_pool.putconn(conn)
     else:
         raise Exception("Database connection pool is not available")
+    
+def open_attach_duckdb():
+    # TODO: read the config values instead of hard coding them:
+    connection_details = "host=localhost port=5432 dbname=postgres_db user=local password=local"
+    conn = duckdb.connect(database=':memory:', read_only=False)
+    conn.execute(f"ATTACH DATABASE '{connection_details}' AS postgres_db (TYPE 'postgres')")
+    return conn
