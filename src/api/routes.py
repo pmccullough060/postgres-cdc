@@ -3,7 +3,7 @@ import random
 import string
 
 import duckdb
-from flask import Blueprint, jsonify
+from flask import Blueprint, Response, jsonify
 
 from .db import close_db_connection, get_db_connection, open_attach_duckdb
 
@@ -37,11 +37,11 @@ def add_user():
 
 @bp.route('getDelta', methods=['GET'])
 def get_delta():
-    # export as parquet
     conn = open_attach_duckdb()
-    result = conn.execute("SELECT * FROM postgres_db.users_audit").fetchall()
+    parquet_file_path = 'delta_data.parquet'
+    conn.execute(f"COPY (SELECT * FROM postgres_db.users_audit ua INNER JOIN postgres_db.users u ON u.user_id = ua.user_id WHERE changed_at > NOW() - INTERVAL '1 hour' AND ua.Operation = 'INSERT') TO '{parquet_file_path}' (FORMAT 'parquet')")
     conn.close()
-    return jsonify(result)
+    return Response("OK", status=200)
 
 def random_string(length):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
