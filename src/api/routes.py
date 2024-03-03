@@ -37,6 +37,7 @@ def add_user():
 
 @bp.route('getDelta', methods=['GET'])
 def get_delta():
+    # export as parquet
     conn = open_attach_duckdb()
     result = conn.execute("SELECT * FROM postgres_db.users_audit").fetchall()
     conn.close()
